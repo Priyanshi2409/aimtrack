@@ -41,7 +41,9 @@ export interface AIProvider {
   readonly id: string;
   complete(opts: CompleteOptions): Promise<string>;
   stream(opts: CompleteOptions): AsyncIterable<string>;
-  completeWithWebSearch(opts: CompleteOptions & { maxSearches: number; onEvent?: (e: AgentEvent) => void }): Promise<SearchCompletion>;
+  completeWithWebSearch(
+    opts: CompleteOptions & { maxSearches: number; onEvent?: (e: AgentEvent) => void; /** used by providers without a built-in search tool */ queries?: string[] },
+  ): Promise<SearchCompletion>;
 }
 
 export type AIErrorCode =
@@ -61,8 +63,8 @@ const FRIENDLY: Record<AIErrorCode, string> = {
   overloaded: "The AI service is busy at the moment. Please retry in a few seconds.",
   timeout: "The AI took too long to respond. Please try again.",
   invalid_output: "The AI returned something we couldn't understand, even after a retry. Please try again.",
-  search_unavailable: "Live web search isn't available for this API key. Enable web search in the Anthropic Console.",
-  quota: "The AI account is out of credits. Add credits in the Anthropic Console.",
+  search_unavailable: "Live web search isn't available right now (search key missing, invalid or not enabled).",
+  quota: "The free AI or search quota is used up for now. Please try again later.",
   bad_request: "The AI rejected this request. Try rephrasing your goal.",
   unknown: "Something went wrong talking to the AI. Please try again.",
 };

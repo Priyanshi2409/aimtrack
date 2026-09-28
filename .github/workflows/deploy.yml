@@ -1,8 +1,8 @@
 name: Deploy
 
+# Optional: fully scripted deploy via the Vercel API (needs repo secrets).
+# The default path is Vercel's Git integration, which runs `npm run vercel-build`.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -25,6 +25,10 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      GEMINI_MODEL_SMART: ${{ vars.GEMINI_MODEL_SMART }}
+      GEMINI_MODEL_FAST: ${{ vars.GEMINI_MODEL_FAST }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
@@ -36,8 +40,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
 
-      - name: Check AI key and model
-        if: env.ANTHROPIC_API_KEY != ''
+      - name: Check AI provider and web search
         run: node scripts/check-ai.mjs
 
       - name: Migrate Supabase database

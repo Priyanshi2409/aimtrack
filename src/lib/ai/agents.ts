@@ -73,6 +73,7 @@ export async function researchGoal(kind: ResearchKind, goal: P.GoalContext, onEv
     maxSearches: 4,
     maxTokens: 3500,
     onEvent,
+    queries: P.researchQueries(kind, goal),
   });
   onEvent({ type: "status", text: "Checking every claim against the pages actually found" });
 

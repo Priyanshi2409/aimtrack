@@ -116,3 +116,16 @@ You cannot change the plan yourself; if a change would help, tell them which but
 
 ${context}`;
 }
+
+/** Search queries for providers without a built-in search tool (Gemini + Tavily). */
+export function researchQueries(kind: ResearchKind, g: GoalContext): string[] {
+  const goal = g.raw_input.replace(/\s+/g, " ").trim().slice(0, 120);
+  switch (kind) {
+    case "examples":
+      return [`how I ${goal} my story experience`, `${g.title} success story real example`, `${g.title} journey interview case study`];
+    case "requirements":
+      return [`${g.title} requirements skills needed`, `${g.title} cost timeline how long does it take`, `${g.title} guide resources India`];
+    case "pitfalls":
+      return [`${g.title} common mistakes why people fail`, `${g.title} challenges how to overcome`, `${g.title} lessons learned`];
+  }
+}

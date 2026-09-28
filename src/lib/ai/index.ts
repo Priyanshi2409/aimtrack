@@ -1,6 +1,7 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { aiProviderName, env } from "@/lib/env";
 import { AnthropicProvider } from "./anthropic";
+import { GeminiProvider } from "./gemini";
 import { AIError, type AIProvider } from "./provider";
 
 let cached: AIProvider | null | undefined;
@@ -12,7 +13,13 @@ let cached: AIProvider | null | undefined;
  */
 export function getProvider(): AIProvider | null {
   if (cached !== undefined) return cached;
-  cached = env.anthropicKey ? new AnthropicProvider(env.anthropicKey, { smart: env.aiModelSmart, fast: env.aiModelFast }) : null;
+  const which = aiProviderName();
+  cached =
+    which === "anthropic"
+      ? new AnthropicProvider(env.anthropicKey, { smart: env.aiModelSmart, fast: env.aiModelFast })
+      : which === "gemini"
+        ? new GeminiProvider(env.geminiKey, env.tavilyKey, { smart: env.geminiModelSmart || undefined, fast: env.geminiModelFast || undefined })
+        : null;
   return cached;
 }
 

@@ -6,7 +6,7 @@ import { Badge, Card } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/session";
 import { withUser } from "@/lib/db/client";
 import * as repo from "@/lib/db/repo";
-import { env, isAiLive, isSupabaseAuth } from "@/lib/env";
+import { aiProviderName, env, isAiLive, isSupabaseAuth } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -25,7 +25,9 @@ export default async function SettingsPage() {
           <Bot className="mt-0.5 size-4 text-iris" />
           <div>
             <div className="font-medium">AI</div>
-            {isAiLive() ? (
+            {aiProviderName() === "gemini" ? (
+              <div className="text-muted">Google Gemini (free tier) + Tavily web search</div>
+            ) : isAiLive() ? (
               <div className="text-muted">
                 Claude · research/planning <span className="font-mono text-xs">{env.aiModelSmart}</span>, coach/reviews <span className="font-mono text-xs">{env.aiModelFast}</span>
               </div>

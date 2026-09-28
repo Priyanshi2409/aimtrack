@@ -5,8 +5,8 @@ export default defineConfig({
   test: { include: ["tests/unit/**/*.test.ts"], environment: "node" },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
-      "server-only": path.resolve(__dirname, "tests/unit/empty.ts"),
+      "@": path.resolve(import.meta.dirname, "src"),
+      "server-only": path.resolve(import.meta.dirname, "tests/unit/empty.ts"),
     },
   },
 });

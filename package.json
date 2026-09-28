@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "db:migrate": "node scripts/migrate.mjs",
     "db:migrate:local": "node scripts/migrate.mjs --local-bootstrap",
-    "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed.ts"
+    "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed.ts",
+    "vercel-build": "bash scripts/vercel-build.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

@@ -128,7 +128,9 @@ npm run db:migrate && npm run seed && npm run dev
 | `DATABASE_URL` | yes | Supabase **Transaction pooler** URI (port 6543) |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | prod | Supabase Auth. Without them, local dev auth is used |
 | `SUPABASE_SERVICE_ROLE_KEY` | prod | Server-only. Creates the demo user |
-| `ANTHROPIC_API_KEY` | optional | Enables live AI. Web search must be enabled for the org in the Anthropic Console |
+| `GEMINI_API_KEY` + `TAVILY_API_KEY` | optional (free) | Google Gemini free tier for text + Tavily (1,000 free searches/month) for research |
+| `ANTHROPIC_API_KEY` | optional (paid) | Claude with built-in web search. Used instead of Gemini when set |
+| `AI_PROVIDER` | optional | Force `anthropic` or `gemini` |
 | `AI_MODEL_SMART` / `AI_MODEL_FAST` | optional | Default `claude-sonnet-5` / `claude-haiku-4-5-20251001` |
 | `AI_DAILY_CALL_CAP` | optional | Global AI calls per 24h (default 500) |
 | `CRON_SECRET` | prod | Protects `/api/cron/daily` |
@@ -144,6 +146,10 @@ npm run lint && npm run typecheck
 ```
 
 ## Deployment (CI/CD)
+
+**Default:** Vercel's Git integration. Every push to `main` builds with `npm run vercel-build`, which runs the idempotent migrations, refreshes the demo account, checks the AI keys and then builds. GitHub Actions `CI` runs lint, types, unit and E2E tests on every push.
+
+**Optional fully scripted deploy:** `.github/workflows/deploy.yml` (manual trigger, needs repo secrets):
 
 `.github/workflows/deploy.yml` on every push to `main`:
 
@@ -164,7 +170,9 @@ A **Vercel Cron** (`vercel.json`) calls `/api/cron/daily` at 01:00 IST: replans,
 | Vercel | Hobby | ₹0 |
 | Supabase | Free (500 MB DB, 50k MAU) | ₹0 (pauses after 7 days without traffic; the daily cron keeps it awake) |
 | GitHub + Actions | Free | ₹0 |
-| **Anthropic API** | Pay-as-you-go ($5 minimum top-up) | **≈ $1–5** for personal use. A new goal costs ≈ $0.20–0.30 (≈9–12 web searches at $10/1000 plus tokens). A coach message costs ≈ $0.005–0.01 |
+| Google Gemini API | Free tier | ₹0 (rate-limited; Google may use free-tier data to improve its products) |
+| Tavily search | Free (1,000 searches/month) | ₹0 (≈6 searches per new goal) |
+| Anthropic API (optional upgrade) | Pay-as-you-go | ≈ $1–5/month personal use, ≈ $0.20–0.30 per new goal |
 
 ## Project structure
 

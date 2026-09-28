@@ -4,7 +4,8 @@ Short log of choices made while building autonomously, with the reason for each.
 
 | # | Decision | Why |
 |---|---|---|
-| 1 | **Claude (Anthropic) as the AI provider**, behind an `AIProvider` interface | The spec asked for tool use + web search. Claude's server-side `web_search` tool returns the exact URLs it read, which makes citation verification possible. Gemini's free tier no longer includes Google Search grounding, so there was no free option with real search. |
+| 1a | **Free stack by default: Gemini (free tier) + Tavily search (1,000 free/month)**, Claude as an optional paid upgrade | The owner wanted ₹0 running cost. Gemini's free tier has no search grounding, so research searches explicitly with Tavily and the model may only cite Tavily's URLs. The same citation check applies. |
+| 1 | **Claude (Anthropic) supported as a provider**, behind an `AIProvider` interface | The spec asked for tool use + web search. Claude's server-side `web_search` tool returns the exact URLs it read, which makes citation verification possible. Gemini's free tier no longer includes Google Search grounding, so there was no free option with real search. |
 | 2 | Two model tiers: `claude-sonnet-5` (research/plan), `claude-haiku-4-5` (questions, coach, reviews, weekly extension) | Quality where it matters, ~2× cheaper for chatty/simple calls. Both configurable via env. |
 | 3 | **Citation verification in code**, not just in the prompt | Prompts can't guarantee honesty. Findings whose URL wasn't returned by the search tool are dropped and counted. |
 | 4 | Research split into **3 parallel agents** streamed as NDJSON | Faster (parallel), keeps each call well under the 300s Vercel Hobby limit, and gives a truthful live progress UI (actual queries and domains, not fake spinners). |
@@ -28,3 +29,5 @@ Short log of choices made while building autonomously, with the reason for each.
 | 22 | Design: near-black + "volt" lime accent, dark by default | High-energy, "training app" feel that fits goal tracking. Every categorical color also has a text label (charts avoid color-only identity). |
 | 23 | Coach can't modify the plan directly; it points you to "Lighten today" / "Replan" | Keeps plan changes deterministic and explainable. |
 | 24 | Timezone per user (default Asia/Kolkata), dates stored as `DATE` strings | Streaks and "today" must follow the user's day, not the server's UTC day. |
+| 25 | Deploy through Vercel's Git integration, with migrations + demo seed in the build step | Zero-click deploys on every push with no CI secrets. The scripted GitHub Actions deploy is kept as an optional manual workflow. |
+| 26 | Gemini provider tries a list of free models and remembers the first that works | Free-tier model names change often, so the app shouldn't break when one is retired. |

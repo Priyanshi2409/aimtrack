@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { env, isAiLive, isDbConfigured, isSupabaseAuth } from "@/lib/env";
+import { aiProviderName, env, isDbConfigured, isSupabaseAuth } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,12 @@ export async function GET() {
   const out: Record<string, unknown> = {
     ok: true,
     auth: isSupabaseAuth() ? "supabase" : "local",
-    ai: isAiLive() ? { provider: "anthropic", smart: env.aiModelSmart, fast: env.aiModelFast } : "offline-templates",
+    ai:
+      aiProviderName() === "anthropic"
+        ? { provider: "anthropic", smart: env.aiModelSmart, fast: env.aiModelFast }
+        : aiProviderName() === "gemini"
+          ? { provider: "gemini", search: env.tavilyKey ? "tavily" : "none" }
+          : "offline-templates",
     db: isDbConfigured() ? "configured" : "missing",
   };
   if (isDbConfigured()) {
