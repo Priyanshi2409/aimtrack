@@ -148,6 +148,7 @@ export function GoalWizard({ today, resume }: { today: string; resume?: ResumeSt
       setStep("research");
       // Update the URL (so a refresh resumes here) without remounting the wizard.
       window.history.replaceState(null, "", `/goals/new?resume=${r.id}`);
+      router.refresh(); // show the new goal in the sidebar (client state is preserved)
     } catch (e) {
       setError((e as Error).message);
     } finally {

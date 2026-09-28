@@ -30,5 +30,5 @@ export default async function NewGoalPage({ searchParams }: { searchParams: Prom
     };
     return { today, resume: state };
   });
-  return <GoalWizard today={today} resume={resume} key={resume?.goalId ?? "new"} />;
+  return <GoalWizard today={today} resume={resume}/>;
 }
