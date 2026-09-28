@@ -1,0 +1,69 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+      AI_MODEL_SMART: ${{ vars.AI_MODEL_SMART || 'claude-sonnet-5' }}
+      AI_MODEL_FAST: ${{ vars.AI_MODEL_FAST || 'claude-haiku-4-5-20251001' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+
+      - name: Check AI key and model
+        if: env.ANTHROPIC_API_KEY != ''
+        run: node scripts/check-ai.mjs
+
+      - name: Migrate Supabase database
+        run: node scripts/migrate.mjs --required
+
+      - name: Seed / refresh demo account
+        run: npm run seed
+
+      - name: Configure Vercel project + environment variables
+        run: bash scripts/vercel-setup.sh
+
+      - name: Deploy to Vercel (production)
+        run: npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN" > deploy-url.txt && cat deploy-url.txt
+
+      - name: Resolve production URL
+        run: bash scripts/vercel-url.sh
+
+      - name: Smoke test production
+        run: |
+          curl -fsS "$PROD_URL/api/health" | tee health.json
+          npx playwright install --with-deps chromium
+          E2E_BASE_URL="$PROD_URL" npx playwright test --project=desktop
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## AimTrack deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production URL: ${PROD_URL:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          [ -f health.json ] && { echo '```json'; cat health.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

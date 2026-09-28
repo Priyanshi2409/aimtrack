@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aimtrack
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/aimtrack
+      AUTH_SECRET: ci-only-secret-0123456789abcdef
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests (plan validation, replanning, streaks, stats)
+        run: npm test
+      - name: Migrate local Postgres (with Supabase auth shim)
+        run: npm run db:migrate:local
+      - name: Seed demo data
+        run: npm run seed
+      - name: Build
+        run: npm run build
+      - name: Start app
+        run: |
+          nohup npm start -- -p 3100 > next.log 2>&1 &
+          npx wait-on http://localhost:3100/api/health -t 60000
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests (offline AI templates)
+        run: npx playwright test
+        env: { E2E_BASE_URL: "http://localhost:3100" }
+      - if: failure()
+        run: tail -100 next.log || true
