@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ───────────── Design tokens ─────────────
+   Dark is the default. Accent = "volt" lime (focus / progress), ember = streaks,
+   sky = information, iris = AI. All text/background pairs meet WCAG AA. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f6f6f1;
+  --bg-grid: rgba(17, 19, 23, 0.045);
+  --surface: #ffffff;
+  --surface-2: #f0f0ea;
+  --surface-3: #e6e6de;
+  --border: #dedcd2;
+  --border-strong: #c9c7bb;
+  --fg: #111317;
+  --fg-muted: #5b606b;
+  --fg-subtle: #7c818b;
+  --volt: #b8ec3a;
+  --volt-strong: #4d7a00;
+  --volt-fg: #111317;
+  --volt-soft: rgba(141, 196, 20, 0.16);
+  --ember: #e4572e;
+  --ember-soft: rgba(228, 87, 46, 0.12);
+  --sky: #0a7bbd;
+  --sky-soft: rgba(10, 123, 189, 0.1);
+  --iris: #6d4de6;
+  --iris-soft: rgba(109, 77, 230, 0.1);
+  --danger: #c62828;
+  --heat-0: #e7e6dd;
+  --heat-1: #d6ef9c;
+  --heat-2: #b0de4d;
+  --heat-3: #7fb416;
+  --heat-4: #4d7a00;
+  --shadow: 0 1px 2px rgba(17, 19, 23, 0.06), 0 8px 24px -12px rgba(17, 19, 23, 0.12);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0a0b0d;
+  --bg-grid: rgba(255, 255, 255, 0.028);
+  --surface: #121418;
+  --surface-2: #181b20;
+  --surface-3: #22262d;
+  --border: #252930;
+  --border-strong: #353a43;
+  --fg: #eceef2;
+  --fg-muted: #9aa1ad;
+  --fg-subtle: #737a86;
+  --volt: #c6f432;
+  --volt-strong: #c6f432;
+  --volt-fg: #0a0b0d;
+  --volt-soft: rgba(198, 244, 50, 0.12);
+  --ember: #ff7a4d;
+  --ember-soft: rgba(255, 122, 77, 0.14);
+  --sky: #5cc8ff;
+  --sky-soft: rgba(92, 200, 255, 0.12);
+  --iris: #a891ff;
+  --iris-soft: rgba(168, 145, 255, 0.13);
+  --danger: #ff6b6b;
+  --heat-0: #1b1e23;
+  --heat-1: #2f4212;
+  --heat-2: #4f7314;
+  --heat-3: #86b81c;
+  --heat-4: #c6f432;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-subtle: var(--fg-subtle);
+  --color-volt: var(--volt);
+  --color-volt-strong: var(--volt-strong);
+  --color-volt-fg: var(--volt-fg);
+  --color-volt-soft: var(--volt-soft);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-sky: var(--sky);
+  --color-sky-soft: var(--sky-soft);
+  --color-iris: var(--iris);
+  --color-iris-soft: var(--iris-soft);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --shadow-card: var(--shadow);
+  --animate-shimmer: shimmer 1.6s linear infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
 }
 
+html { background: var(--bg); }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--volt); color: var(--volt-fg); }
+
+:focus-visible {
+  outline: 2px solid var(--volt-strong);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.dark :focus-visible { outline-color: var(--volt); }
+
+.bg-grid {
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%);
+  background-size: 400% 100%;
+  animation: var(--animate-shimmer);
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
