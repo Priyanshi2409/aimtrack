@@ -33,7 +33,9 @@ export class GeminiProvider implements AIProvider {
     const w = this.working[tier];
     if (w) return [w];
     const pin = this.pinned[tier];
-    return pin ? [pin, ...CANDIDATES[tier].filter((m) => m !== pin)] : CANDIDATES[tier];
+    // "smart" falls back to the fast models too: a slightly weaker answer beats an error.
+    const base = tier === "smart" ? [...CANDIDATES.smart, ...CANDIDATES.fast.filter((m) => !CANDIDATES.smart.includes(m))] : CANDIDATES.fast;
+    return pin ? [pin, ...base.filter((m) => m !== pin)] : base;
   }
 
   private headers(): Record<string, string> {
@@ -74,6 +76,7 @@ export class GeminiProvider implements AIProvider {
           return res;
         }
         const text = await res.text().catch(() => "");
+        console.error(`[gemini] ${model} ${action.split("?")[0]} → ${res.status}: ${text.slice(0, 300).replace(/\s+/g, " ")}`);
         if ((res.status === 401 || res.status === 403) && !this.useBearer && this.apiKey.startsWith("AQ.")) {
           this.useBearer = true; // newer Google key format may need bearer auth
           attempt--;
@@ -86,11 +89,11 @@ export class GeminiProvider implements AIProvider {
         if (res.status === 429 || res.status === 503 || res.status === 500) {
           lastErr = new AIError(res.status === 429 ? "rate_limited" : "overloaded");
           const retry = Number(text.match(/"retryDelay":\s*"(\d+)/)?.[1] ?? 0);
-          if (attempt < 3) {
-            await sleep(Math.min(20_000, (retry || 2 ** attempt * 3) * 1000));
+          if (attempt < 2) {
+            await sleep(Math.min(15_000, (retry || 2 ** attempt * 3) * 1000));
             continue;
           }
-          throw lastErr;
+          break; // this model is saturated: fall back to the next free model instead of failing
         }
         if (res.status === 401 || res.status === 403) throw new AIError("not_configured", "Gemini key rejected");
         throw new AIError("bad_request", text.slice(0, 160));

@@ -4,6 +4,7 @@ import { clarifyGoal } from "@/lib/ai/agents";
 import { errorResponse, parseBody, requireApiUser, spendAiBudget } from "@/lib/api";
 import { todayIn } from "@/lib/core/dates";
 import { withUser } from "@/lib/db/client";
+import { aiProviderName } from "@/lib/env";
 import * as repo from "@/lib/db/repo";
 
 export const maxDuration = 60;
@@ -18,7 +19,8 @@ export async function POST(req: Request) {
     const tz = await withUser(user.id, async (tx) => (await repo.getProfile(tx, user.id)).timezone);
     await spendAiBudget(user.id, "clarify");
     const res = await clarifyGoal(raw, todayIn(tz));
-    return NextResponse.json({ ...res.data, live: res.live, today: todayIn(tz) });
+    // Free-tier providers are rate-limited, so the wizard runs research agents one at a time there.
+    return NextResponse.json({ ...res.data, live: res.live, today: todayIn(tz), sequential: aiProviderName() === "gemini" });
   } catch (e) {
     return errorResponse(e);
   }

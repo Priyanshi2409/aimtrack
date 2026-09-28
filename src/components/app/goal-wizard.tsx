@@ -79,6 +79,7 @@ export function GoalWizard({ today, resume }: { today: string; resume?: ResumeSt
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(true);
+  const [sequential, setSequential] = useState(true); // safe default; clarify tells us if parallel is fine
 
   // details
   const [title, setTitle] = useState(resume?.title ?? "");
@@ -111,7 +112,7 @@ export function GoalWizard({ today, resume }: { today: string; resume?: ResumeSt
     setError(null);
     setBusy(true);
     try {
-      const r = await postJson<{ title: string; category: string; questions: Question[]; suggested_deadline: string | null; suggested_minutes_per_day: number; live: boolean }>(
+      const r = await postJson<{ title: string; category: string; questions: Question[]; suggested_deadline: string | null; suggested_minutes_per_day: number; live: boolean; sequential?: boolean }>(
         "/api/goals/clarify",
         { raw },
       );
@@ -121,6 +122,7 @@ export function GoalWizard({ today, resume }: { today: string; resume?: ResumeSt
       if (r.suggested_deadline && r.suggested_deadline > today) setDeadline(r.suggested_deadline);
       setMinutes(r.suggested_minutes_per_day);
       setLive(r.live);
+      setSequential(r.sequential ?? true);
       setStep("details");
     } catch (e) {
       setError((e as Error).message);
@@ -187,10 +189,15 @@ export function GoalWizard({ today, resume }: { today: string; resume?: ResumeSt
   useEffect(() => {
     if (step !== "research" || !goalId || startedResearch.current) return;
     startedResearch.current = true;
-    KINDS.forEach((k) => {
-      if (agents[k].status === "idle") runAgent(k);
-    });
-  }, [step, goalId, agents, runAgent]);
+    const todo = KINDS.filter((k) => agents[k].status === "idle");
+    if (sequential) {
+      (async () => {
+        for (const k of todo) await runAgent(k);
+      })();
+    } else {
+      todo.forEach((k) => runAgent(k));
+    }
+  }, [step, goalId, agents, runAgent, sequential]);
 
   const allDone = KINDS.every((k) => agents[k].status === "done");
   const anyError = KINDS.some((k) => agents[k].status === "error");
@@ -409,7 +416,7 @@ export function GoalWizard({ today, resume }: { today: string; resume?: ResumeSt
           {step === "research" && (
             <div>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Researching how people actually did it</h1>
-              <p className="mt-2 text-muted">Three research agents search the web in parallel. Every claim must link to a page they actually read, or it gets dropped.</p>
+              <p className="mt-2 text-muted">Three research agents search the web. Every claim must link to a page they actually read, or it gets dropped.</p>
               <div className="mt-8 space-y-3">
                 {KINDS.map((k) => (
                   <AgentRow key={k} kind={k} log={agents[k]} onRetry={() => runAgent(k, true)} />

@@ -16,7 +16,15 @@ const PROMPTS = ["I only have 1 hour today. What should I do?", "I'm stuck on th
 function Md({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/);
   const inline = (s: string, key: string) =>
-    s.split(/(\*\*[^*]+\*\*)/g).map((part, i) => (part.startsWith("**") && part.endsWith("**") ? <strong key={key + i}>{part.slice(2, -2)}</strong> : <span key={key + i}>{part}</span>));
+    s.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).map((part, i) =>
+      part.startsWith("**") && part.endsWith("**") ? (
+        <strong key={key + i}>{part.slice(2, -2)}</strong>
+      ) : part.length > 2 && part.startsWith("*") && part.endsWith("*") ? (
+        <em key={key + i}>{part.slice(1, -1)}</em>
+      ) : (
+        <span key={key + i}>{part}</span>
+      ),
+    );
   return (
     <>
       {blocks.map((b, bi) => {
